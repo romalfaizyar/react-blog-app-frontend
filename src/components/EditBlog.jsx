@@ -2,23 +2,22 @@ import React, { useEffect, useState } from "react";
 import Editor from "react-simple-wysiwyg";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const EditBlog = () => {
-  const [blog, setBlog] = useState([]);
+  const [blog, setBlog] = useState(null);
+  const [html, setHtml] = useState("");
+  const [imageId, setImageId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const params = useParams();
+
   const {
     register,
     handleSubmit,
-    watch,
     reset,
     formState: { errors },
   } = useForm();
-
-  const [html, setHtml] = useState("");
-  const [imageId, setimageId] = useState("");
-  const navigate = useNavigate();
 
   function onChange(e) {
     setHtml(e.target.value);
@@ -26,49 +25,83 @@ const EditBlog = () => {
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
     const formData = new FormData();
     formData.append("image", file);
-    const res = await fetch("${import.meta.env.VITE_API_URL}/save-temp-image", {
-      method: "POST",
-      body: formData,
-    });
 
-    const result = await res.json();
-    if (result.status == false) {
-      alert(result.errors.image);
-      e.target.value = null;
+    try {
+      setLoading(true);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/save-temp-image`, {
+        method: "POST",
+        body: formData,
+      });
+      const result = await res.json();
+
+      if (!result.status) {
+        alert(result.errors?.image || "Image upload failed");
+        e.target.value = null;
+        setImageId(null);
+        return;
+      }
+      setImageId(result.image.id);
+    } catch (error) {
+      alert("Error uploading image");
+      setImageId(null);
+    } finally {
+      setLoading(false);
     }
-    setimageId(result.image.id);
   };
 
   const fetchBlog = async () => {
-    const res = await fetch(
-      "${import.meta.env.VITE_API_URL}/blogs/" + params.id
-    );
-    const result = await res.json();
-    setBlog(result.data);
-    setHtml(result.data.description);
-    reset(result.data);
+    try {
+      setLoading(true);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/blogs/${params.id}`);
+      const result = await res.json();
+
+      if (res.ok) {
+        setBlog(result.data);
+        setHtml(result.data.description || "");
+        reset(result.data);
+        setImageId(result.data.image_id || null);
+      } else {
+        toast.error(result.message || "Failed to fetch blog data");
+      }
+    } catch (error) {
+      toast.error("Error fetching blog data");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formSubmit = async (data) => {
     const newData = { ...data, description: html, image_id: imageId };
-    const rest = await fetch(
-      "${import.meta.env.VITE_API_URL}/blogs/" + params.id,
-      {
+
+    try {
+      setLoading(true);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/blogs/${params.id}`, {
         method: "PUT",
-        headers: {
-          "content-type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newData),
+      });
+
+      if (res.ok) {
+        toast.success("Blog updated successfully!");
+        navigate("/");
+      } else {
+        const errorData = await res.json();
+        toast.error(errorData.message || "Failed to update blog");
       }
-    );
-    toast("Blog updated succesfully!");
-    navigate("/");
+    } catch (error) {
+      toast.error("Failed to update blog");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchBlog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -87,12 +120,10 @@ const EditBlog = () => {
               <input
                 {...register("title", { required: true })}
                 type="text"
-                className={`form-control ${errors.title && "is-invalid"}`}
+                className={`form-control ${errors.title ? "is-invalid" : ""}`}
                 placeholder="Title"
               />
-              {errors.title && (
-                <p className="invalid-feedback">Title field is required</p>
-              )}
+              {errors.title && <p className="invalid-feedback">Title field is required</p>}
             </div>
             <div className="mb-3">
               <label className="form-label">Short Description</label>
@@ -117,12 +148,14 @@ const EditBlog = () => {
                 onChange={handleFileChange}
                 type="file"
                 className="form-control"
+                disabled={loading}
               />
               <div className="mt-2">
-                {blog.image && (
+                {blog?.image && (
                   <img
                     className="w-50"
-                    src={`http://localhost:8000/uploads/blogs/${blog.image}`}
+                    src={`${import.meta.env.VITE_API_URL.replace('/api','')}/uploads/blogs/${blog.image}`}
+                    alt="Blog"
                   />
                 )}
               </div>
@@ -132,14 +165,14 @@ const EditBlog = () => {
               <input
                 {...register("author", { required: true })}
                 type="text"
-                className={`form-control ${errors.author && "is-invalid"}`}
+                className={`form-control ${errors.author ? "is-invalid" : ""}`}
                 placeholder="Author"
               />
-              {errors.author && (
-                <p className="invalid-feedback">Author field is required</p>
-              )}
+              {errors.author && <p className="invalid-feedback">Author field is required</p>}
             </div>
-            <button className="btn btn-dark">Update</button>
+            <button className="btn btn-dark" disabled={loading}>
+              {loading ? "Please wait..." : "Update"}
+            </button>
           </div>
         </form>
       </div>
