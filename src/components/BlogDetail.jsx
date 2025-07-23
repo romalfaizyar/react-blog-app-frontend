@@ -48,10 +48,11 @@ const BlogDetail = () => {
 
           {blog.image && (
             <img
-              className="w-100 mb-3"
-              src={`${baseUrl}/uploads/blogs/${blog.image}`}
-              alt={blog.title}
-            />
+  src={`https://api.narwan.net/uploads/blogs/${blog.image}`}
+  className="w-100"
+  alt={blog.title}
+/>
+
           )}
 
           <div
