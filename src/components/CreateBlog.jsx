@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 
 const CreateBlog = () => {
   const [html, setHtml] = useState("");
-  const [imageId, setimageId] = useState("");
+  const [imageId, setImageId] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   function onChange(e) {
@@ -15,39 +16,70 @@ const CreateBlog = () => {
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
     const formData = new FormData();
     formData.append("image", file);
-    const res = await fetch("${import.meta.env.VITE_API_URL}/save-temp-image", {
-      method: "POST",
-      body: formData,
-    });
 
-    const result = await res.json();
-    if (result.status == false) {
-      alert(result.errors.image);
-      e.target.value = null;
+    try {
+      setLoading(true);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/save-temp-image`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await res.json();
+      if (!result.status) {
+        alert(result.errors?.image || "Image upload failed");
+        e.target.value = null;
+        setImageId(null);
+      } else {
+        setImageId(result.image.id);
+      }
+    } catch (error) {
+      alert("Error uploading image");
+      setImageId(null);
+    } finally {
+      setLoading(false);
     }
-    setimageId(result.image.id);
   };
 
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm();
 
   const formSubmit = async (data) => {
+    if (!imageId) {
+      toast.error("Please upload an image first!");
+      return;
+    }
     const newData = { ...data, description: html, image_id: imageId };
-    const rest = await fetch("${import.meta.env.VITE_API_URL}/blogs", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(newData),
-    });
-    toast("Blog added succesfully!");
-    navigate("/");
+    try {
+      setLoading(true);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/blogs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newData),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        toast.error(`Error: ${errorData.message || res.statusText}`);
+        setLoading(false);
+        return;
+      }
+
+      toast.success("Blog added successfully!");
+      navigate("/");
+    } catch (error) {
+      toast.error("Failed to create blog.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,7 +98,7 @@ const CreateBlog = () => {
               <input
                 {...register("title", { required: true })}
                 type="text"
-                className={`form-control ${errors.title && "is-invalid"}`}
+                className={`form-control ${errors.title ? "is-invalid" : ""}`}
                 placeholder="Title"
               />
               {errors.title && (
@@ -96,6 +128,7 @@ const CreateBlog = () => {
                 onChange={handleFileChange}
                 type="file"
                 className="form-control"
+                disabled={loading}
               />
             </div>
             <div className="mb-3">
@@ -103,14 +136,16 @@ const CreateBlog = () => {
               <input
                 {...register("author", { required: true })}
                 type="text"
-                className={`form-control ${errors.author && "is-invalid"}`}
+                className={`form-control ${errors.author ? "is-invalid" : ""}`}
                 placeholder="Author"
               />
               {errors.author && (
                 <p className="invalid-feedback">Author field is required</p>
               )}
             </div>
-            <button className="btn btn-dark">Create</button>
+            <button className="btn btn-dark" disabled={loading}>
+              {loading ? "Please wait..." : "Create"}
+            </button>
           </div>
         </form>
       </div>
