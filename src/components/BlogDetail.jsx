@@ -25,13 +25,11 @@ const BlogDetail = () => {
     fetchBlog();
   }, []);
 
+  const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api$/, "");
+
   if (loading) return <div className="container pt-5">Loading...</div>;
   if (error) return <div className="container pt-5 text-danger">Error: {error}</div>;
   if (!blog) return <div className="container pt-5">No blog found</div>;
-
-  // حذف "/api" از انتهای URL برای دسترسی به مسیر فایل‌های آپلود شده
-  const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api$/, "");
-  const imageUrl = blog.image ? `${baseUrl}/uploads/blogs/${blog.image}` : null;
 
   return (
     <div className="container">
@@ -44,13 +42,17 @@ const BlogDetail = () => {
       <div className="row">
         <div className="col-md-12">
           <p>
-            by <strong>{blog.author}</strong> on {new Date(blog.created_at).toLocaleDateString()}
+            by <strong>{blog.author}</strong> on{" "}
+            {new Date(blog.created_at).toLocaleDateString()}
           </p>
-          <img
-  className="w-100"
-  src="https://api.narwan.net/uploads/blogs/your_image_name.jpg"
-  alt={blog.title}
-/>
+
+          {blog.image && (
+            <img
+              className="w-100 mb-3"
+              src={`${baseUrl}/uploads/blogs/${blog.image}`}
+              alt={blog.title}
+            />
+          )}
 
           <div
             className="mt-3"
