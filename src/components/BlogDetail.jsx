@@ -46,17 +46,12 @@ const BlogDetail = () => {
           <p>
             by <strong>{blog.author}</strong> on {new Date(blog.created_at).toLocaleDateString()}
           </p>
-          {imageUrl && (
-            <img
-              className="w-100"
-              src={imageUrl}
-              alt={blog.title}
-              onError={e => {
-                e.target.onerror = null;
-                e.target.src = "https://placehold.co/600x400?text=No+Image";
-              }}
-            />
-          )}
+          <img
+  className="w-100"
+  src="https://api.narwan.net/uploads/blogs/your_image_name.jpg"
+  alt={blog.title}
+/>
+
           <div
             className="mt-3"
             dangerouslySetInnerHTML={{ __html: blog.description }}
