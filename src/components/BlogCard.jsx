@@ -2,13 +2,15 @@ import React from "react";
 import { toast } from "react-toastify";
 
 const BlogCard = ({ blog, blogs, setBlogs }) => {
-  // تابع نمایش عکس با آدرس صحیح از env
+  
   const showImage = (img) => {
     if (!img) return "https://placehold.co/600x400";
-    // حذف /api اگر در انتهای VITE_API_URL بود (مثلا https://api.example.com/api)
     const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api$/, "");
-    return `${baseUrl}/uploads/blogs/${img}`;
+    const fullUrl = `${baseUrl}/uploads/blogs/${img}`;
+    console.log("Blog image URL:", fullUrl);
+    return fullUrl;
   };
+
 
   // حذف بلاگ با fetch صحیح و بک‌تیک
   const deleteBlog = async (id) => {
