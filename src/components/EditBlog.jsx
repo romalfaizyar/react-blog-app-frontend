@@ -19,9 +19,9 @@ const EditBlog = () => {
     formState: { errors },
   } = useForm();
 
-  function onChange(e) {
+  const onChange = (e) => {
     setHtml(e.target.value);
-  }
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -104,6 +104,10 @@ const EditBlog = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const getImageUrl = (imgName) => {
+    return `https://api.narwan.net/laravel-blog-app-backend/public/uploads/blogs/${imgName}`;
+  };
+
   return (
     <div className="container">
       <div className="d-flex justify-content-between pt-5 mb-4">
@@ -125,6 +129,7 @@ const EditBlog = () => {
               />
               {errors.title && <p className="invalid-feedback">Title field is required</p>}
             </div>
+
             <div className="mb-3">
               <label className="form-label">Short Description</label>
               <textarea
@@ -134,6 +139,7 @@ const EditBlog = () => {
                 className="form-control"
               ></textarea>
             </div>
+
             <div className="mb-3">
               <label className="form-label">Description</label>
               <Editor
@@ -142,6 +148,7 @@ const EditBlog = () => {
                 containerProps={{ style: { height: "300px" } }}
               />
             </div>
+
             <div className="mb-3">
               <label className="form-label">Image</label>
               <input
@@ -154,12 +161,13 @@ const EditBlog = () => {
                 {blog?.image && (
                   <img
                     className="w-50"
-                    src={`${import.meta.env.VITE_API_URL.replace('/api','')}/uploads/blogs/${blog.image}`}
+                    src={getImageUrl(blog.image)}
                     alt="Blog"
                   />
                 )}
               </div>
             </div>
+
             <div className="mb-3">
               <label className="form-label">Author</label>
               <input
@@ -170,6 +178,7 @@ const EditBlog = () => {
               />
               {errors.author && <p className="invalid-feedback">Author field is required</p>}
             </div>
+
             <button className="btn btn-dark" disabled={loading}>
               {loading ? "Please wait..." : "Update"}
             </button>
