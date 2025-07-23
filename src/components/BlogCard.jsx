@@ -2,26 +2,22 @@ import React from "react";
 import { toast } from "react-toastify";
 
 const BlogCard = ({ blog, blogs, setBlogs }) => {
-  
   const showImage = (img) => {
     if (!img) return "https://placehold.co/600x400";
-    const baseUrl = import.meta.env.VITE_API_URL.replace(/\/api$/, "");
-    const fullUrl = `${baseUrl}/uploads/blogs/${img}`;
-    console.log("Blog image URL:", fullUrl);
-    return fullUrl;
+    
+    // مسیر دقیق تصویر مطابق واقعیت روی سرور
+    return `https://api.narwan.net/laravel-blog-app-backend/public/uploads/blogs/${img}`;
   };
 
-
-  // حذف بلاگ با fetch صحیح و بک‌تیک
   const deleteBlog = async (id) => {
     if (confirm("Are you sure you want to delete?")) {
       try {
-        const ret = await fetch(`${import.meta.env.VITE_API_URL}/blogs/${id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/blogs/${id}`, {
           method: "DELETE",
         });
 
-        if (ret.ok) {
-          const newBlogs = blogs.filter((blog) => blog.id !== id);
+        if (res.ok) {
+          const newBlogs = blogs.filter((b) => b.id !== id);
           setBlogs(newBlogs);
           toast.success("Blog deleted successfully!");
         } else {
@@ -55,7 +51,6 @@ const BlogCard = ({ blog, blogs, setBlogs }) => {
                 className="text-danger"
                 style={{ cursor: "pointer" }}
               >
-                {/* آیکون سطل زباله */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -69,7 +64,6 @@ const BlogCard = ({ blog, blogs, setBlogs }) => {
                 </svg>
               </a>
               <a href={`/blog/edit/${blog.id}`} className="text-dark ms-4">
-                {/* آیکون مداد */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
