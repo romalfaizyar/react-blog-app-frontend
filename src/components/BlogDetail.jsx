@@ -48,10 +48,11 @@ const BlogDetail = () => {
 
           {blog.image && (
             <img
-  src={`https://api.narwan.net/uploads/blogs/${blog.image}`}
   className="w-100"
+  src={`https://api.narwan.net/laravel-blog-app-backend/public/uploads/blogs/${blog.image}`}
   alt={blog.title}
 />
+
 
           )}
 
